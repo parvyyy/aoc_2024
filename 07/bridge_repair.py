@@ -1,10 +1,7 @@
-import copy
-
-def part_1(input: list[str]):
-    # Solved line-by-line, each is independant.
+def bridge_repair(input: list[str]):
     """
+        Solved line-by-line, each is independant.
         Within each line,
-
 
         Create all permutations of '*' and '+'.
 
@@ -22,7 +19,9 @@ def part_1(input: list[str]):
 
         Multiple configarations don't matter. Continue once a single one is determined.
     """
-    calibration_res = set()
+    
+    # Switched from set to list to account for different equations with the same target!
+    calibration_res = list()
 
     for line in input:
         target, values = line.split(':')
@@ -34,20 +33,24 @@ def part_1(input: list[str]):
         # Creates all stack permutations
         operator_stacks: list[list[str]] = get_operator_stacks(n)
 
-        
+        target_found = False
         for stack in operator_stacks:
             # Optimisation - stops once a valid set is determined!
-            if target in calibration_res:
+            if target_found:
                 break
 
-            curr, curr_values = 0, list(reversed(copy.deepcopy(values)))
+            # Reversed creates a seperate copy, hence there is no need to explicitly create a deepcopy :)
+            # Reduces computation time by ~ 1/2
+            curr, curr_values = 0, list(reversed(values))
 
             while curr <= target:
                 if len(stack) == 0:
                     # Only counts if the stack is empty! Otherwise, additional operations will cause it to
                     # be greater!
                     if curr == target:
-                        calibration_res.add(target)
+                        target_found = True
+                        calibration_res.append(target)
+                        # print(f"Adding {target}")
 
                     break
 
@@ -57,23 +60,21 @@ def part_1(input: list[str]):
                         curr_values.append(curr_values.pop() + curr_values.pop())
                     case '*':
                         curr_values.append(curr_values.pop() * curr_values.pop())
+                    case '||':
+                        curr_values.append(int(str(curr_values.pop()) + str(curr_values.pop())))
 
                 curr = curr_values[-1]
 
-
     print(sum(calibration_res))
-def get_operator_stacks(n):
-    if n == 1:
-        return [['+'], ['*']]
-    
-    all_stacks: list[list[str]] = []
-    operators = ['+', '*']
-    for stack in get_operator_stacks(n - 1):
-        for operator in operators:
-            all_stacks.append(stack + [operator])
 
-    return all_stacks
+def get_operator_stacks(n):
+    if n == 0:
+        return [[]]
+
+    operators = ['+', '*', '||']
+    
+    return [stack + [operator] for stack in get_operator_stacks(n - 1) for operator in operators]
         
 if __name__ == "__main__":
     with open("input.txt", 'r') as input:
-        part_1(input.readlines())
+        bridge_repair(input.readlines())
