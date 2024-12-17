@@ -32,21 +32,21 @@ def disk_fragmenter(input: str):
       file_block.append('.')
 
   # Part 1
-  end_index = len(file_block) - 1
-  for (i, char) in enumerate(file_block):
-    while file_block[end_index] == '.':
-      end_index -= 1
+  # end_index = len(file_block) - 1
+  # for (i, char) in enumerate(file_block):
+  #   while file_block[end_index] == '.':
+  #     end_index -= 1
 
-    if i >= end_index:
-      break
+  #   if i >= end_index:
+  #     break
 
-    if char == '.':
-      file_block = file_block[:i] + [file_block[end_index]] + file_block[i+1:]
+  #   if char == '.':
+  #     file_block = file_block[:i] + [file_block[end_index]] + file_block[i+1:]
 
-      file_block[end_index] = '.'
-      end_index -= 1
+  #     file_block[end_index] = '.'
+  #     end_index -= 1
 
-
+  # Part 2
   """
     Find length of first continguous '.' sequence.
     Find length of last continguous number sequence.
@@ -60,49 +60,63 @@ def disk_fragmenter(input: str):
 
     Use a while loop instead for more control. This is because we remain at the
     same '.' seq until it is fulfilled.
+
+    CHANGES:
+    Store the (start_free, end_free) in a list -- not set to preserve order.
+    Go through contiguous seq of #'s from the back. Find the smallest segment
+    they fit in to. Replace them.
   """
   # Part 2
-  # i, end_index = 0, len(file_block) - 1
-  # while i < end_index:
-  #   while file_block[i] != '.':
-  #     i += 1
+  free_spaces = []
 
-  #   start_free = i
+  start_free = end_free = 0
+  for (i, v) in enumerate(file_block):
+    if i < end_free:
+      continue
 
-  #   while file_block[i] == '.':
-  #     i += 1
+    while i < len(file_block) and file_block[i] != '.':
+      i += 1
+    start_free = i
 
-  #   end_free = i
+    while i < len(file_block) and file_block[i] == '.':
+      i += 1
+    end_free = i
 
-  #   start_file, end_file = 0, end_index
+    free_spaces.append((start_free, end_free))
 
-  #   while end_free - start_free < end_file - start_file:
-  #     while file_block[end_index] == '.':
-  #       end_index -= 1
+  free_spaces = free_spaces[:-1]
+  new_file_block = file_block[::]
 
-  #     end_file, v = end_index + 1, file_block[end_index]
+  start_file = end_file = len(file_block)
+  for (i, v) in reversed(list(enumerate(file_block))):
+    if i > start_file:
+      continue
+    
+    while i >= 0 and file_block[i] == '.':
+      i -= 1
+    end_file = i
 
-  #     # We must look for !v instead of '.' as there may be 0 free space between.
-  #     while file_block[end_index] == v:
-  #       end_index -= 1
+    while i >= 0 and file_block[i] == file_block[end_file]:
+      i -= 1
+    start_file = i
 
-  #     start_file = end_index + 1
+    for (j, (start, end)) in enumerate(free_spaces):
+      diff = (end - start) - (end_file - start_file)
+      if diff >= 0:
+          # Move entire file into free space & padd extra space with '.'
+        new_file_block[start:end] = file_block[start_file+1:end_file+1] + ['.'] * diff
 
+        # Replace original file with '.'
+        new_file_block[start_file+1:end_file+1] = ['.'] * (end_file - start_file)
 
-  #   diff = (end_free - start_free) - (end_file - start_file)
+        # Remove this as a free-space candidate & replace it with the new free_space.
+        free_spaces[j] = (end - diff, end)
 
-  #   # Move entire file into free space & padd extra space with '.'
-  #   file_block[start_free:end_free] = file_block[start_file:end_file] + ['.'] * diff
-
-  #   # Replace original file with '.'
-  #   file_block[start_file:end_file] = ['.'] * (end_file - start_file)
-
-
-  # print(file_block)
-
+        break
+  
   # Checksum calculation
   checksum = 0
-  for (i, v) in enumerate(file_block[:end_index+1]):
+  for (i, v) in enumerate(new_file_block):
     if v != '.':
       checksum += (i * int(v))
 
@@ -110,5 +124,5 @@ def disk_fragmenter(input: str):
 
 
 if __name__ == "__main__":
-  with open("small_input.txt", 'r') as f:
+  with open("input.txt", 'r') as f:
     disk_fragmenter(f.read())
