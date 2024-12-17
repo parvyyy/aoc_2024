@@ -1,7 +1,7 @@
 from itertools import combinations
 from collections import defaultdict
 
-def part_1(input: list[str]):
+def resonant_collinearity(input: list[str]):
   """
     Have a hashmap w/ the key's as the frequencies (i.e. 'a', 'A', '0'), and their
     positions as the values in a list.
@@ -38,12 +38,33 @@ def part_1(input: list[str]):
     pairs = list(combinations(v, 2))
 
     for v1, v2 in pairs:
-      antinodes.add((v1[0] - (v2[0] - v1[0]), v1[1] - (v2[1] - v1[1])))
-      antinodes.add((v2[0] + (v2[0] - v1[0]), v2[1] + (v2[1] - v1[1])))
+      diff = (v2[0] - v1[0], v2[1] - v1[1])
 
-  antinodes = set(filter(lambda x: in_bounds(x[0], x[1]), antinodes))
+      # Part 1
+      # antinodes.add((v1[0] - diff[0], v1[1] - diff[1]))
+      # antinodes.add((v2[0] + diff[0], v2[1] + diff[1]))
+
+      # Part 2
+      # Each antenna will now have an antinode on it.
+      while in_bounds(*v1):
+        antinodes.add(v1)
+        v1 = (v1[0] - diff[0], v1[1] - diff[1])
+
+      while in_bounds(*v2):
+        antinodes.add(v2)
+        v2 = (v2[0] + diff[0], v2[1] + diff[1])
+
   print(len(antinodes))
+
+  """
+  Edits for Part 2:
+    Continue adding / subtracting (v2- v1) to the frequencies while
+    the result is still in bounds.
+
+    No longer able to filter afterwards as we need to continue adding
+    until we reach the end of the board -- cannot know how many iterations.
+  """
 
 if __name__ == "__main__":
   with open("input.txt", 'r') as f:
-    part_1(f.readlines())
+    resonant_collinearity(f.readlines())
